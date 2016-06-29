@@ -19,3 +19,11 @@ portaudio 19.20140130
 pyaudio 0.2.9
   https://pypi.python.org/pypi/PyAudio
   install through pip
+
+matplotlib 1.5.1
+  http://matplotlib.org/
+  install through pip
+  
+numpy 1.11.1
+  http://www.numpy.org/
+  install through pip
