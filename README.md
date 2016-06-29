@@ -5,7 +5,7 @@ Python version 2.7
 
 DIY - attempt to create digital audio processor with Python
 
-PYO - process
+PYO - the same idea, but with pyo tools
 
 # Libraries
 
