@@ -1,36 +1,43 @@
-import curses
+import curses as cs
+from curses import panel as pnl
 
 #init screen
-scr = curses.initscr()
-
-#no echo for input
-#cs.noecho()
-
-#cancel Enter for input
-curses.cbreak()
-
-#allow curses to track noncharacter keys
+scr = cs.initscr()
 scr.keypad(1)
+cs.noecho()
+cs.curs_set(False)
 
-#CODE START
+cs.start_color()
+cs.init_pair( 1, cs.COLOR_BLACK, cs.COLOR_GREEN)
 
-pad = curses.newpad(100, 100)
-#  These loops fill the pad with letters; this is
-# explained in the next section
-for y in range(0, 100):
-    for x in range(0, 100):
-        try:
-            pad.addch(y,x, ord('a') + (x*x+y*y) % 26)
-        except curses.error:
-            pass
+window = cs.newwin(5,5,3,5)
+window.box()
+panel = pnl.new_panel(window)
 
-#  Displays a section of the pad in the middle of the screen
-pad.refresh(0,0, 5,5, 20,75)
-pad.getch()
+window2 = cs.newwin(15,15,2,4)
+window2.box()
+window2.addstr(1,1,'Back window')
+panel2 = pnl.new_panel(window2)
 
-#CODE END
-#reverse settings
-#cs.echo()
+running = True
+while running:
+    pnl.update_panels()
+    cs.doupdate()
+    key = scr.getch()
+    if key == 27:
+        running = False
+    if key == ord('w'):
+        window.bkgd(' ', cs.color_pair(1))
+    if key == ord('s'):
+        window.bkgd(' ', cs.color_pair(1) + cs.A_REVERSE)
+    if key == ord('1'):
+        panel.move(1,1)
+        panel.top()
+    if key == ord('2'):
+        panel.move(3,5)
+        panel.top()
+    if key == ord('3'):
+        panel2.top()
 
-#exit
-curses.endwin()
+scr.addstr(0,0,'EXITING...')
+cs.endwin()
