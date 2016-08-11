@@ -4,7 +4,7 @@ import time
 
 SIZE_X = 30
 SIZE_Y = 10
-MINE_NUM = 60
+MINE_NUM = 30
 mines = []
 opened = []
 marks = []
@@ -98,7 +98,7 @@ def printWin(lines):
 		elif i == '~':
 			square.addch(y+1,x,i,curses.color_pair(9))
 		elif i == 'x' or i == '@':
-			if checkWinner():
+			if not play:
 				square.addch(y+1,x,i,curses.color_pair(9)+curses.A_BLINK)
 			else:
 				square.addch(y+1,x,i,curses.color_pair(5)+curses.A_BLINK)
@@ -161,9 +161,7 @@ def addMark(x,y):
 				else:
 					log("   already have mode 1. deleting # %d / %d" % (i, len(marks)))
 					del marks[i]
-					log("   i - 1")
 					i-=1
-					log("   set 'found' to True")
 				found = True
 			i+=1
 		if not found:
@@ -288,15 +286,22 @@ def fillMap(x,y,num):
 	filled = True
 
 def checkWinner():
+	log("checking if won")
 	win = True
-	for i in range(0,SIZE_X):
-		for j in range(0,SIZE_Y):
+	for i in range(0,SIZE_Y):
+		for j in range(0,SIZE_X):
 			if openedTile(j,i):
 				if haveMine(j,i):
+					log("mined tile (%d:%d) was opened" % (j,i))
 					win = False
+					break
 			else:
 				if not haveMine(j,i):
+					log("clear tile (%d:%d) is closed" % (j,i))
 					win = False
+					break
+		if win==False:
+			break
 	return win
 
 #####setup
@@ -395,23 +400,24 @@ if checkWinner():
 	scrwin = 0
 	scrYwin = int(SIZE_Y/2)
 	if SIZE_X >= 8:
-		scrwin = int(SIZE_X - 7/2)
-		square.addstr(scrYwin-1,scrwin,"#######", curses.color_pair(10))
-		square.addstr(scrYwin,scrwin,"# WIN #", curses.color_pair(10))
-		square.addstr(scrYwin+1,scrwin,"#######", curses.color_pair(10))
+		scrwin = int((SIZE_X - 7)/2)
+		square.addstr(scrYwin-1,scrwin,"#######", curses.color_pair(10)+curses.A_REVERSE)
+		square.addstr(scrYwin,scrwin,"# WIN #", curses.color_pair(10)+curses.A_REVERSE)
+		square.addstr(scrYwin+1,scrwin,"#######", curses.color_pair(10)+curses.A_REVERSE)
 		if TIME_spend > 999:
-			square.addstr(scrYwin+2,scrwin,"slowpoke" % int(TIME_spend), curses.color_pair(10))
+			square.addstr(scrYwin+2,scrwin,"slowpoke" % int(TIME_spend), curses.color_pair(10)+curses.A_REVERSE)
 		else:
-			square.addstr(scrYwin+2,scrwin,"%d secs" % int(TIME_spend), curses.color_pair(10))
+			square.addstr(scrYwin+2,scrwin,"%d secs" % int(TIME_spend), curses.color_pair(10)+curses.A_REVERSE)
 	else:
-		square.addstr(scrYwin,scrwin,"WIN", curses.color_pair(10))
+		square.addstr(scrYwin,scrwin,"WIN", curses.color_pair(10)+curses.A_REVERSE)
 		if TIME_spend > 999:
-			square.addstr(scrYwin+1,scrwin,"---", curses.color_pair(10))
+			square.addstr(scrYwin+1,scrwin,"---", curses.color_pair(10)+curses.A_REVERSE)
 		else:
-			square.addstr(scrYwin+1,scrwin,"%d" % int(TIME_spend), curses.color_pair(10))
+			square.addstr(scrYwin+1,scrwin,"%d" % int(TIME_spend), curses.color_pair(10)+curses.A_REVERSE)
 
 	square.refresh()
 else:
+	play = True
 	showMines()
 	showMap()
 	scr.clear()
