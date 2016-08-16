@@ -21,8 +21,6 @@ def game_playcard(pcard):
 			issue = "fuse is empty. game over"
 	if issue!="":
 		notification(issue)
-	elif added:
-		notification("\"%s\" card %d was played!" % (pcard.get_color_string(), pcard.get_number()))
 	return added
 
 def drawTable():
@@ -100,7 +98,7 @@ def notification(msg):
 	for i in range(0, width+2):
 		line += "#"
 	print(line)
-	time.sleep(0.25)
+	time.sleep(0.7)
 
 
 
@@ -110,21 +108,26 @@ class Player:
 		self.cards = [takecard(),takecard(),takecard(),takecard()]
 		self.known = [Card(0,0),Card(0,0),Card(0,0),Card(0,0)]
 		self.ai = use_ai
+		notification("New Player \"%s\" joined" % name)
 
 	def makeHint(self, plr, cardI, color_value):
 		global num_hints
+		global steps
 		if num_hints > 0:
 			if color_value:
 				plr.known[cardI].update(plr.cards[cardI].get_color(), 0)
+				notification("%s hinted %s: card %d is \"%s\"" % (self.name, plr.name, cardI, plr.cards[cardI].get_color_string()))
 			else:
 				plr.known[cardI].update(0, plr.cards[cardI].get_number())
+				notification("%s hinted %s: card %d is %s" % (self.name, plr.name, cardI, plr.cards[cardI].get_number()))
 			num_hints -= 1
+			steps += 1
 		else:
-			notification("No hint points! Can't make a hint")
+			notification("To %s > No hint points! Can't make a hint" % self.name)
 
 	def eraseCard(self, cardI):
 		global num_hints
-		notification("card [%s,%d] deleted from %s" % (self.cards[cardI].get_color_string(), self.cards[cardI].get_number(), self.name))
+		notification("card [%s,%d] was deleted from %s" % (self.cards[cardI].get_color_string(), self.cards[cardI].get_number(), self.name))
 		del self.cards[cardI]
 		del self.known[cardI]
 		if num_hints < 6:
@@ -134,9 +137,9 @@ class Player:
 			self.cards.append(newcard)
 			self.known.append(Card(0,0))
 
-
 	def playcard(self, cardI):
-		game_playcard(self.cards[cardI])
+		if game_playcard(self.cards[cardI]):
+			notification("%s played card [%s,%s]" % (self.name, self.cards[cardI].get_color_string(), self.cards[cardI].get_number()))
 		self.eraseCard(cardI)
 
 	def drawCards(self):
@@ -236,7 +239,7 @@ def takecard():
 		return
 
 def drawScr():
-	print("\n\n\n\n\n\n\n\n")
+	print("\n===========\n")
 	for i in players:
 		if i.ai:
 			i.drawCards()
@@ -253,74 +256,139 @@ def in_list(arr, card):
 				return True
 	return False
 
+def color_in_list(arr, color):
+	for crd in arr:
+		if crd.color == color:
+				return True
+	return False
+
+def number_in_list(arr, numb):
+	for crd in arr:
+		if crd.number == numb:
+				return True
+	return False
+
+ai_dis = False
 def run_AI():
-	for bot in players:
-		if bot.ai:
-			#check known
-			move_done = False
-			if len(bot.known) > 0:
-				for kcard in range(0,len(bot.known)):
-					if bot.known[kcard].get_color() != 0 and bot.known[kcard].get_number != 0:
-						if bot.known[kcard].get_number() == table[bot.known[kcard].get_color()-1].get_number() + 1:
-							bot.playcard(kcard)
-							move_done = True
-							break
-			#check what is possible to drop
-			if not move_done:
+	global steps
+	if not ai_dis:
+		for bot in players:
+			if bot.ai:
+				move_done = False
+				#___check desirable cards")
+				wanted_cards = []
+				for i in range(0,4):
+					if table[i].get_number() != 5:
+						wanted_cards.append(Card(table[i].get_color(), table[i].get_number() + 1))
+				#___check min val on table")
 				minval = 6
 				for i in table:
 					if minval > i.get_number():
 						minval = i.get_number()
-				for i in range(0,len(bot.cards)):
-					col = bot.known[i].get_color()
-					val = bot.known[i].get_number()
-					if val !=0 and val < minval:
-						bot.eraseCard(i)
-						move_done = True
-						break
-					if val !=0 and col!=0 and not move_done:
-						if val <= table[col-1].get_number():
-							bot.eraseCard(i)
+				#___bot should have cards")
+				if len(bot.known) > 0:
+					#___check the card")
+					for kcard in range(0,len(bot.known)):
+						#___make info easy to use")
+						col = bot.known[kcard].get_color()
+						val = bot.known[kcard].get_number()
+						#___if the number too small, erase it")
+						if val !=0 and val < minval:
+							bot.eraseCard(kcard)
 							move_done = True
 							break
-			#check dublicates
-			if not move_done:
-				for i in range(0,len(bot.cards) - 1):
-					if bot.known[i].color != 0 and bot.known[i].number != 0 and not move_done:
-						for j in range(i+1, len(bot.cards)):
-							if bot.known[j].color != 0 and bot.known[j].number != 0:
-								if bot.known[i].color == bot.known[j].color and not move_done:
-									if bot.known[i].number == bot.known[j].number:
-										notification("card %d = %d" % (i,j))
-										bot.eraseCard(i)
+						#___if the number too small for color, erase it")
+						if val !=0 and col!=0:
+							if val <= table[col-1].get_number():
+								bot.eraseCard(kcard)
+								move_done = True
+								break
+						#___if the color is full (no desirable cards with that color)")
+						if col!=0 and not color_in_list(wanted_cards, col):
+							bot.eraseCard(kcard)
+							move_done = True
+							break
+						#___if the card is desirable")
+						if in_list(wanted_cards, bot.known[kcard]):
+							bot.playcard(kcard)
+							move_done = True
+							break
+						
+				#___check dublicates")
+				if not move_done:
+					for i in range(0,len(bot.cards) - 1):
+						if bot.known[i].color != 0 and bot.known[i].number != 0 and not move_done:
+							for j in range(i+1, len(bot.cards)):
+								if bot.known[j].color != 0 and bot.known[j].number != 0:
+									if bot.known[i].color == bot.known[j].color and not move_done:
+										if bot.known[i].number == bot.known[j].number:
+											bot.eraseCard(i)
+											move_done = True
+											break
+				#___finding cards for hint")
+				if not move_done and num_hints > 0:
+					#___check next players")
+					for receiver in players:
+						if receiver != bot and not move_done:
+							for crdN in range(0,len(receiver.cards)):
+								if in_list(wanted_cards, receiver.cards[crdN]):
+									#___found good card")
+									if receiver.known[crdN].get_number() == 0:
+										bot.makeHint(receiver, crdN, False)
 										move_done = True
 										break
-			#finding possible cards
-			if not move_done:
-				wanted_cards = []
-				for i in range(0,4):
-					wanted_cards.append(Card(table[i].get_color(), table[i].get_number() + 1))
-				#check next players
-				for receiver in players:
-					if receiver != bot:
-						for crdN in range(0,len(receiver.cards)):
-							if in_list(wanted_cards, receiver.cards[crdN]):
-								if receiver.known[crdN].get_number() == 0:
-									bot.makeHint(receiver, crdN, False)
-									move_done = True
-									break
-								elif receiver.known[crdN].get_color() == 0:
+									elif receiver.known[crdN].get_color() == 0:
+										bot.makeHint(receiver, crdN, True)
+										move_done = True
+										break
+				#___try to find old cards")
+				if not move_done and num_hints > 0:
+					for receiver in players:
+						if receiver != bot and not move_done:
+							for crdN in range(0,len(receiver.cards)):
+								if not color_in_list(wanted_cards, receiver.cards[crdN].get_color()):
+									#___color is full")
 									bot.makeHint(receiver, crdN, True)
 									move_done = True
 									break
+								elif receiver.cards[crdN].get_number() < minval:
+									#___all colors with that number were played")
+									bot.makeHint(receiver, crdN, False)
+									move_done = True
+									break
+				#___notify about important card")
+				if not move_done and num_hints > 0:
+					for receiver in players:
+						if receiver != bot:
+							for i in range(0,5):
+								Dnum = 5 - i
+								for crdN in range(0,len(receiver.cards)):
+									if receiver.cards[crdN].get_number() == Dnum and not move_done:
+										#___found card with max number:")
+										if receiver.known[crdN].get_number() == 0:
+											bot.makeHint(receiver, crdN, False)
+											move_done = True
+											break
+										elif receiver.known[crdN].get_color() == 0:
+											bot.makeHint(receiver, crdN, True)
+											move_done = True
+											break
+				if not move_done:
+					notification("%s missed turn" % bot.name)
+				else:
+					steps += 1
+	else:
+		notification("AI disabled")
 	drawScr()
 
+steps = 0
 stack = randomize(stack)
 num_players = 2 #2...5
 players = []
 players.append(Player("Player", False))
-players.append(Player("Bob", True))
-players.append(Player("Jez", True))
+players.append(Player("Bot1", True))
+players.append(Player("Bot2", True))
+players.append(Player("Bot3", True))
 
 num_hints = 6
 num_fuse = 3
@@ -328,14 +396,19 @@ table = [Card(1,0), Card(2,0), Card(3,0), Card(4,0)]
 issue = ""
 
 play = True
-run_AI()
+drawScr()
 while play and issue=="":
 	############################################################
 	cmd = raw_input()
 	cmd_w = cmd.split(' ')
 	if cmd_w[0] == 'help':
-		print("Availible commands:\nhint [player#] [card#] color\nhint [player#] [card#] number\nplay [card#]\ndrop [card#]\nhelp\ncheat\nexit")
-	elif cmd_w[0]=='hint':
+		print("Availible commands:\nhint1 [player#] [card#] color\nhint1 [player#] [card#] number\nhint [player#] [color/number] <cards0123>\nplay [card#]\ndrop [card#]\nmiss\nhelp\ncheat\ntoggle_ai\nexit")
+	elif cmd_w[0]=='miss':
+		notification("player missed turn")
+		run_AI()
+	elif cmd_w[0]=="toggle_ai":
+		ai_dis = not ai_dis
+	elif cmd_w[0]=='hint1':
 		if len(cmd_w) == 4:
 			if int(cmd_w[1]) < len(players):
 				plrN = int(cmd_w[1])
@@ -343,11 +416,9 @@ while play and issue=="":
 					crdN = int(cmd_w[2])
 					if cmd_w[3] == "color":
 						players[0].makeHint(players[plrN], crdN, True)
-						#drawScr()
 						run_AI()
 					elif cmd_w[3] == "number":
 						players[0].makeHint(players[plrN], crdN, False)
-						#drawScr()
 						run_AI()
 					else:
 						notification("can give a hint only about color or number, not %s" % cmd_w[3])
@@ -356,7 +427,55 @@ while play and issue=="":
 			else:
 				notification("there are only %d players!" % len(players))
 		else:
-			notification("not enought parameters! got %d, need 4" % len(cmd_w))
+			notification("not enought parameters. got %d, need 4" % len(cmd_w))
+	elif cmd_w[0]=='hint':
+		if len(cmd_w) == 4:
+			if int(cmd_w[1]) < len(players):
+				plrN = int(cmd_w[1])
+				if int(max(cmd_w[3])) <= 3 and int(max(cmd_w[3])) >= 0:
+					if cmd_w[2] in ["yellow", "red", "green", "blue", "y", "Y", "r", "R", "g", "G", "b", "B"]:
+						col = 0
+						if cmd_w[2] in ["red", "r", "R"]:
+							col = 1
+						elif cmd_w[2] in ["green", "g", "G"]:
+							col = 2
+						elif cmd_w[2] in ["blue", "b", "B"]:
+							col = 3
+						elif cmd_w[2] in ["yellow", "y", "Y"]:
+							col = 4
+						permit = True
+						for P in range(0,len(cmd_w[3])):
+							if players[plrN].cards[int(cmd_w[3][P])].get_color() != col:
+								permit = False
+						if permit:
+							for P in range(0,len(cmd_w[3])):
+								players[0].makeHint(players[plrN], int(cmd_w[3][P]), True)
+								num_hints += 1
+							num_hints -= 1
+							run_AI()
+						else:
+							notification("not all mentioned cards have the same color")
+					elif int(cmd_w[2]) in range(1,6):
+						permit = True
+						for P in range(0,len(cmd_w[3])):
+							if players[plrN].cards[int(cmd_w[3][P])].get_number() != int(cmd_w[2]):
+								permit = False
+						if permit:
+							for P in range(0,len(cmd_w[3])):
+								players[0].makeHint(players[plrN], int(cmd_w[3][P]), False)
+								num_hints += 1
+							num_hints -= 1
+							run_AI()
+						else:
+							notification("not all mentioned cards have the same number")
+					else:
+						notification("use color word or number only, not %s" % cmd_w[2])
+				else:
+					notification("card numbers can only be 0, 1, 2, and 3")
+			else:
+				notification("there are only %d players" % len(players))
+		else:
+			notification("not enought parameters. got %d, need 4" % len(cmd_w))
 	elif cmd_w[0]=='play':
 		if len(cmd_w) == 2:
 			if int(cmd_w[1]) < len(players[0].cards):
@@ -366,7 +485,7 @@ while play and issue=="":
 			else:
 				notification("you have only %d cards!" % len(players[0].cards))
 		else:
-			notification("not enought parameters! got %d, need 2" % len(cmd_w))
+			notification("not enought parameters. got %d, need 2" % len(cmd_w))
 	elif cmd_w[0]=='exit':
 		play = False
 	elif cmd_w[0]=='cheat':
@@ -374,7 +493,9 @@ while play and issue=="":
 			col = players[0].cards[i].get_color()
 			num = players[0].cards[i].get_number()
 			players[0].known[i].update(col, num)
-			drawScr()
+		num_hints = 6
+		num_fuse = 3
+		drawScr()
 	elif cmd_w[0]=='drop':
 		if len(cmd_w) == 2:
 			if int(cmd_w[1]) < len(players[0].cards):
@@ -382,9 +503,9 @@ while play and issue=="":
 				players[0].eraseCard(crdN)
 				run_AI()
 			else:
-				notification("you have only %d cards!" % len(players[0].cards))
+				notification("you have only %d cards" % len(players[0].cards))
 		else:
-			notification("not enought parameters! got %d, need 2" % len(cmd_w))
+			notification("not enought parameters. got %d, need 2" % len(cmd_w))
 	else:
 		notification("%s command not supported" % cmd_w[0])
 
@@ -397,9 +518,4 @@ if issue!="":
 
 if check_winner():
 	print("Team win!")
-#stack = randomize(stack)
-#debug_print_cards(stack)
-#debug_print_cards(stack)
-
-
-
+	print("Steps done: %d" % steps)
