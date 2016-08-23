@@ -148,8 +148,9 @@ class Player:
 		line3 = ""
 		line4 = ""
 		if self.ai:
+			cardN = 1
 			for i in range(0, len(self.cards)):
-				line1 += "*-*"
+				line1 += "%d-*" % cardN
 				known = "|"
 				if self.known[i].get_color() != 0:
 					known = ">"
@@ -166,12 +167,15 @@ class Player:
 					known = ">"
 				line3 += "%s%d|" % (known, self.cards[i].get_number())
 				line4 += "*-*"
+				cardN += 1
 		else:
+			cardN = 1
 			for i in self.known:
-				line1 += "*-------*"
+				line1 += "%d-------*" % cardN
 				line2 += "|%s|" % i.get_color_string()
 				line3 += "|%s|" % i.get_number_string()
 				line4 += "*-------*"
+				cardN += 1
 		line = "%s\n%s\n%s\n%s" % (line1, line2, line3, line4)
 		print(line)
 
@@ -231,6 +235,10 @@ for col in range(0,4): #color
 	for num in range(0,5): #number
 		stack.append(Card(col+1, num+1))
 		stack.append(Card(col+1, num+1))
+		if num < 5:
+			stack.append(Card(col+1, num+1))
+			if num < 3:
+				stack.append(Card(col+1, num+1))
 
 def takecard():
 	if len(stack) > 0:
@@ -412,8 +420,8 @@ while play and issue=="":
 		if len(cmd_w) == 4:
 			if int(cmd_w[1]) < len(players):
 				plrN = int(cmd_w[1])
-				if int(cmd_w[2]) < len(players[plrN].cards):
-					crdN = int(cmd_w[2])
+				if int(cmd_w[2]) < len(players[plrN].cards) + 1:
+					crdN = int(cmd_w[2]) - 1
 					if cmd_w[3] == "color":
 						players[0].makeHint(players[plrN], crdN, True)
 						run_AI()
@@ -421,7 +429,7 @@ while play and issue=="":
 						players[0].makeHint(players[plrN], crdN, False)
 						run_AI()
 					else:
-						notification("can give a hint only about color or number, not %s" % cmd_w[3])
+						notification("can give a hint only as color or number, not %s" % cmd_w[3])
 				else:
 					notification("player %d have only %d cards!" % (plrN, len(players[plrN].cards)))
 			else:
@@ -432,7 +440,7 @@ while play and issue=="":
 		if len(cmd_w) == 4:
 			if int(cmd_w[1]) < len(players):
 				plrN = int(cmd_w[1])
-				if int(max(cmd_w[3])) <= 3 and int(max(cmd_w[3])) >= 0:
+				if int(max(cmd_w[3])) <= 4 and int(min(cmd_w[3])) >= 1:
 					if cmd_w[2] in ["yellow", "red", "green", "blue", "y", "Y", "r", "R", "g", "G", "b", "B"]:
 						col = 0
 						if cmd_w[2] in ["red", "r", "R"]:
@@ -445,11 +453,11 @@ while play and issue=="":
 							col = 4
 						permit = True
 						for P in range(0,len(cmd_w[3])):
-							if players[plrN].cards[int(cmd_w[3][P])].get_color() != col:
+							if players[plrN].cards[int(cmd_w[3][P])-1].get_color() != col:
 								permit = False
 						if permit:
 							for P in range(0,len(cmd_w[3])):
-								players[0].makeHint(players[plrN], int(cmd_w[3][P]), True)
+								players[0].makeHint(players[plrN], int(cmd_w[3][P])-1, True)
 								num_hints += 1
 							num_hints -= 1
 							run_AI()
@@ -458,11 +466,11 @@ while play and issue=="":
 					elif int(cmd_w[2]) in range(1,6):
 						permit = True
 						for P in range(0,len(cmd_w[3])):
-							if players[plrN].cards[int(cmd_w[3][P])].get_number() != int(cmd_w[2]):
+							if players[plrN].cards[int(cmd_w[3][P])-1].get_number() != int(cmd_w[2]):
 								permit = False
 						if permit:
 							for P in range(0,len(cmd_w[3])):
-								players[0].makeHint(players[plrN], int(cmd_w[3][P]), False)
+								players[0].makeHint(players[plrN], int(cmd_w[3][P])-1, False)
 								num_hints += 1
 							num_hints -= 1
 							run_AI()
@@ -471,15 +479,15 @@ while play and issue=="":
 					else:
 						notification("use color word or number only, not %s" % cmd_w[2])
 				else:
-					notification("card numbers can only be 0, 1, 2, and 3")
+					notification("card numbers can only be 1, 2, 3, and 4")
 			else:
 				notification("there are only %d players" % len(players))
 		else:
 			notification("not enought parameters. got %d, need 4" % len(cmd_w))
 	elif cmd_w[0]=='play':
 		if len(cmd_w) == 2:
-			if int(cmd_w[1]) < len(players[0].cards):
-				crdN = int(cmd_w[1])
+			if int(cmd_w[1]) - 1 < len(players[0].cards):
+				crdN = int(cmd_w[1]) - 1
 				players[0].playcard(crdN)
 				run_AI()
 			else:
@@ -498,8 +506,8 @@ while play and issue=="":
 		drawScr()
 	elif cmd_w[0]=='drop':
 		if len(cmd_w) == 2:
-			if int(cmd_w[1]) < len(players[0].cards):
-				crdN = int(cmd_w[1])
+			if int(cmd_w[1]) - 1 < len(players[0].cards):
+				crdN = int(cmd_w[1]) - 1
 				players[0].eraseCard(crdN)
 				run_AI()
 			else:

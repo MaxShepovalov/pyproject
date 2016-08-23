@@ -1,6 +1,7 @@
 from random import random as rand
 import curses
 import time
+import sys
 
 SIZE_X = 30
 SIZE_Y = 10
@@ -17,17 +18,50 @@ curses.curs_set(False)
 square = curses.newwin(SIZE_Y+3,SIZE_X+3,1,1)
 square.keypad(1)
 
+def haveArg(line):
+	found = False
+	for cmd in sys.argv:
+		if cmd == line:
+			found = True
+			break
+	return found
+
+for cmd in sys.argv:
+	if cmd not in ["main.py","-h","--help","-n","--no-color"]:
+		curses.echo()
+		curses.curs_set(True)
+		curses.endwin()
+		print("miner/main.py: miner game on python language with interface on \"curses\"")
+		print("run:\tpython main.py [params]\n")
+		print("\t-h --help: show this page")
+		print("\t-n --no-color: force standard \"white on black\" style")
+		print("####\nUnknown argument: %s" % cmd)
+		exit()		
+
+if haveArg("--help") or haveArg("-h"):
+	curses.echo()
+	curses.curs_set(True)
+	curses.endwin()
+	print("miner/main.py: miner game on python language with interface on \"curses\"")
+	print("run:\tpython main.py [params]\n")
+	print("\t-h --help: show this page")
+	print("\t-n --no-color: force standard \"white on black\" style")
+	exit()
 curses.start_color()
-curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
-curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-curses.init_pair(5, curses.COLOR_RED, curses.COLOR_BLACK)
-curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
-curses.init_pair(7, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-curses.init_pair(8, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
-curses.init_pair(9, curses.COLOR_BLUE, curses.COLOR_BLACK)
-curses.init_pair(10, curses.COLOR_CYAN, curses.COLOR_BLACK)
+if haveArg("--no-color") or haveArg("-n"):
+	for i in range(1,11):
+		curses.init_pair(i, curses.COLOR_WHITE, curses.COLOR_BLACK)
+else:
+	curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+	curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+	curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+	curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+	curses.init_pair(5, curses.COLOR_RED, curses.COLOR_BLACK)
+	curses.init_pair(6, curses.COLOR_RED, curses.COLOR_BLACK)
+	curses.init_pair(7, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+	curses.init_pair(8, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+	curses.init_pair(9, curses.COLOR_BLUE, curses.COLOR_BLACK)
+	curses.init_pair(10, curses.COLOR_CYAN, curses.COLOR_BLACK)
 
 logs = "=================\nNEW STARTED\n=================\n"
 
@@ -81,7 +115,7 @@ def terminate():
 		log("curses not initialysed yet. exit anyway")
 		pass
 	#logArray(mines, "mines")
-	logArray(marks, "marks")
+	#logArray(marks, "marks")
 	#logArray(opened,"opened tiles")
 	print(logs)
 	exit()
