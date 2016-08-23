@@ -101,8 +101,8 @@ def log(msg):
     scr.addstr(0,0,msg)
 
 def getDGas():
-	x = curSpeed - 4
-	return 0.04 + (x*(x*x-4))/3500
+	x = curSpeed #- 4
+	return 0.04 + (x*(x*x-4))/7000.0
 
 scr = curses.initscr()
 scr.keypad(1)
@@ -145,7 +145,7 @@ while run:
 					break
 	#calculate gas
 	if curGas > 0:
-		curGas += getDGas()
+		curGas -= getDGas()
 	#apply speed (vertical)
 	if itr==next_move and curGas > 0:
 		next_move = (next_move+(11-curSpeed)) % 100
@@ -162,7 +162,7 @@ while run:
 	elif tiles[curTile]==12 or tiles[curTile]==11 or tiles[curTile]==10:
 		curLine = 4
 	#draw dashboard
-	log("Spd: %d Gas: %d Mtr:%d/%d iter: %d next: %d" %(curSpeed, int(curGas), curTile, len(tiles), itr, next_move))
+	log("Spd: %d Gas: %d Mtr:%d/%d iter: %d next: %d dV: %f" %(curSpeed, int(curGas), curTile, len(tiles), itr, next_move, getDGas()))
 	#draw road
 	for i in range(0,15):
 		t = 7 + curTile - i
