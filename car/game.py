@@ -143,6 +143,11 @@ while run:
 				if tiles[inter]==24 and links[inter]==oldMap:
 					curTile=inter+2
 					break
+	#check gas station "."
+	if tiles[curTile]==5 or tiles[curTile]==6:
+		if curLine==0 or curLine==6:
+			curGas = 100.0
+			curSpeed = 1
 	#calculate gas
 	if curGas > 0:
 		curGas -= getDGas()
