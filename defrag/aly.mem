@@ -1,0 +1,4 @@
+test nano
+print printfile
+memshow printmem
+del delfile
