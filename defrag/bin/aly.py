@@ -3,9 +3,9 @@
 ALIAS = []
 FUNC = []
 
-PROGRAMS = ["alias", "addfile", "printfile", "delfile", "printmem", "memstat", "nano", "malloc", "free", "defrag", "ls", "exit", "help", "move"]
+PROGRAMS = ["alias", "addfile", "printfile", "delfile", "printmem", "memstat", "nano", "malloc", "free", "defrag", "ls", "exit", "help", "move", "backup"]
 
-FILE = "aly.mem"
+FILE = "bin/aly.mem"
 
 #read file
 fl = open(FILE, 'r')
