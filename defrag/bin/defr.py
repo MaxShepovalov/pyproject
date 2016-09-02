@@ -1,5 +1,6 @@
 import redactor
 import aly
+
 MEM_SIZE = 20
 
 MEM_ARR = []
@@ -563,6 +564,10 @@ def gl_defrag(full):
 
 def run_command(cmd_words):
     global run
+    global HEAD_ARR
+    global MEM_ARR
+    global MEM_SIZE
+
     retval = -1
     if cmd_words[0] == "exit":
         run = False
@@ -802,6 +807,16 @@ def run_command(cmd_words):
                 #print("Moving file %s at %d" % (flname, i))
                 if flname != "":
                     gl_movefile(flname, i)
+
+    elif cmd_words[0] == "backup":
+	import FS.extFS as fs
+        if len(cmd_words) > 1:
+            if cmd_words[1] == "save":
+                print("not ready yet")
+            elif cmd_words[1] == "restore":
+                #open file
+                f_line = fs.prepare2()
+                HEAD_ARR, MEM_ARR, MEM_SIZE = fs.descr(f_line)
 
     else:
         #check alias
