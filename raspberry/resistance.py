@@ -136,3 +136,12 @@ def find(val):
 		circuit[len(circuit)-1].ctype = "parall"
 	print " final delt_r = "+str(delt_r)+"\n"
 	return circuit
+
+"""
+ [ R ]
+-[ R ]-
+ [ R ]
+
+
+
+"""
