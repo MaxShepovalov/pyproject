@@ -1,0 +1,5 @@
+#array
+JUMP 0x10
+10:
+SETB 5
+SETA 0

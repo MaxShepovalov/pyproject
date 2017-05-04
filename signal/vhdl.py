@@ -68,6 +68,15 @@ class cntr:
     def getstr(self):
         return hex(self.val)[2:]
 
+class spec_dsp:
+    def __init__(self):
+        self.MAX_VAL = pow(2,WIDTH)-1
+        self.val = int('1'*(WIDTH-1),2)
+        self.state = 0
+        self.step = pow(2,WIDTH)/4
+        self.Yval = []
+        self.Xval = []
+
 #input
 import math
 def inp(t):
