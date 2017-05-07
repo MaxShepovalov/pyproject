@@ -1,0 +1,18 @@
+#load data
+00:
+SETA 10
+STAA 0xa0
+SETA 20
+STAA 0xa2
+SETA 40
+STAA 0xa4
+#add
+LDAA 0xa0
+LDAB 0xa2
+ADDA
+LDAB 0xa4
+ADDA
+STAA 0xb0
+#stop
+STOP
+
